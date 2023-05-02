@@ -38,7 +38,10 @@ dependencies {
     implementation 'com.google.mlkit:pose-detection:18.0.0-beta3'
     // Pose detection with accurate models
     implementation 'com.google.mlkit:pose-detection-accurate:18.0.0-beta3'
+    // CameraX
     implementation 'androidx.camera:camera-view:1.2.2'
+    implementation 'androidx.camera:camera-lifecycle:1.2.2'
+    implementation 'androidx.camera:camera-camera2:1.2.2'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
