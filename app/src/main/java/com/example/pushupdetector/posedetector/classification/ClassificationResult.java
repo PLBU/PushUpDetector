@@ -43,13 +43,6 @@ public class ClassificationResult {
     return classConfidences.containsKey(className) ? classConfidences.get(className) : 0;
   }
 
-  public String getMaxConfidenceClass() {
-    return max(
-        classConfidences.entrySet(),
-        (entry1, entry2) -> (int) (entry1.getValue() - entry2.getValue()))
-        .getKey();
-  }
-
   public void incrementClassConfidence(String className) {
     classConfidences.put(className,
         classConfidences.containsKey(className) ? classConfidences.get(className) + 1 : 1);

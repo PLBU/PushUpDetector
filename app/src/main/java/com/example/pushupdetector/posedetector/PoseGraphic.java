@@ -16,12 +16,14 @@
 
 package com.example.pushupdetector.posedetector;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 
 import com.example.pushupdetector.helper.GraphicOverlay;
 import com.google.mlkit.vision.common.PointF3D;

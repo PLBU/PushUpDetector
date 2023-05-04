@@ -25,6 +25,7 @@ import static com.example.pushupdetector.posedetector.classification.Utils.sumAb
 import static java.lang.Double.max;
 import static java.lang.Math.min;
 
+import android.util.Log;
 import android.util.Pair;
 
 import com.google.mlkit.vision.common.PointF3D;
@@ -162,8 +163,11 @@ public class PoseClassifier {
             }
         }
 
+        Log.d(TAG, "classify: meanDistances" + meanDistances);
+
         for (Pair<PoseSample, Float> sampleDistances : meanDistances) {
             String className = sampleDistances.first.getClassName();
+            Log.d(TAG, "classify: " + className);
             result.incrementClassConfidence(className);
         }
 
