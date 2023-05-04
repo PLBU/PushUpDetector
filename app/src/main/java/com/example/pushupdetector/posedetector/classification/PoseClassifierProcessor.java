@@ -45,10 +45,6 @@ public class PoseClassifierProcessor {
   // These are the labels in the given {@code POSE_SAMPLES_FILE}. You can set your own class labels
   // for your pose samples.
   private static final String PUSHUPS_CLASS = "pushups_down";
-  private static final String SQUATS_CLASS = "squats_down";
-  private static final String[] POSE_CLASSES = {
-    PUSHUPS_CLASS, SQUATS_CLASS
-  };
 
   private final boolean isStreamMode;
 
@@ -88,9 +84,7 @@ public class PoseClassifierProcessor {
     }
     poseClassifier = new PoseClassifier(poseSamples);
     if (isStreamMode) {
-      for (String className : POSE_CLASSES) {
-        repCounters.add(new RepetitionCounter(className));
-      }
+        repCounters.add(new RepetitionCounter(PUSHUPS_CLASS));
     }
   }
 
@@ -132,18 +126,6 @@ public class PoseClassifierProcessor {
         }
       }
       result.add(lastRepResult);
-    }
-
-    // Add maxConfidence class of current frame to result if pose is found.
-    if (!pose.getAllPoseLandmarks().isEmpty()) {
-      String maxConfidenceClass = classification.getMaxConfidenceClass();
-      String maxConfidenceClassResult = String.format(
-          Locale.US,
-          "%s : %.2f confidence",
-          maxConfidenceClass,
-          classification.getClassConfidence(maxConfidenceClass)
-              / poseClassifier.confidenceRange());
-      result.add(maxConfidenceClassResult);
     }
 
     return result;

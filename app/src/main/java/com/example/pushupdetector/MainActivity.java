@@ -1,9 +1,13 @@
 package com.example.pushupdetector;
 
+import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.core.Camera;
@@ -18,12 +22,14 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.example.pushupdetector.helper.GraphicOverlay;
 import com.example.pushupdetector.helper.PreferenceHelper;
 import com.example.pushupdetector.posedetector.PoseDetectorProcessor;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
 import java.util.concurrent.ExecutionException;
@@ -182,6 +188,14 @@ public class MainActivity extends AppCompatActivity {
                                     imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
                         }
                         needUpdateGraphicOverlayImageSourceInfo = false;
+                    }
+
+                    try {
+                        imageProcessor.processImageProxy(imageProxy, graphicOverlay);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
+                        Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
+                                .show();
                     }
                 });
 
