@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing -->
+    <dimen name="spacing_px">1dp</dimen>
+    <dimen name="spacing_0.5">2dp</dimen>
+    <dimen name="spacing_1">4dp</dimen>
+    <dimen name="spacing_1.5">6dp</dimen>
+    <dimen name="spacing_2">8dp</dimen>
+    <dimen name="spacing_2.5">10dp</dimen>
+    <dimen name="spacing_3">12dp</dimen>
+    <dimen name="spacing_4">16dp</dimen>
+    <dimen name="spacing_5">20dp</dimen>
+    <dimen name="spacing_6">24dp</dimen>
+    <dimen name="spacing_7">28dp</dimen>
+    <dimen name="spacing_8">32dp</dimen>
+    <dimen name="spacing_9">36dp</dimen>
+    <dimen name="spacing_10">40dp</dimen>
+    <dimen name="spacing_12">48dp</dimen>
+    <dimen name="spacing_14">56dp</dimen>
+    <dimen name="spacing_16">64dp</dimen>
+    <dimen name="spacing_18">72dp</dimen>
+    <dimen name="spacing_20">80dp</dimen>
+    <dimen name="spacing_24">96dp</dimen>
+    <dimen name="spacing_26">108dp</dimen>
+    <dimen name="spacing_28">112dp</dimen>
+    <dimen name="spacing_32">128dp</dimen>
+    <dimen name="spacing_40">160dp</dimen>
+    <dimen name="spacing_44">176dp</dimen>
+    <dimen name="spacing_48">192dp</dimen>
+    <dimen name="spacing_56">224dp</dimen>
+    <dimen name="spacing_64">256dp</dimen>
+    <dimen name="spacing_96">320dp</dimen>
+
+</resources>

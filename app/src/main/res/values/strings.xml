@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">PushUpDetector</string>
+    <string name="counter">Counter</string>
+    <string name="selesai">Selesai</string>
 </resources>

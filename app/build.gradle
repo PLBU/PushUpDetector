@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.pushupdetector"
-        minSdk 21
+        minSdk 28
         targetSdk 33
         versionCode 1
         versionName "1.0"
