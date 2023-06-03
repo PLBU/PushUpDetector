@@ -22,7 +22,7 @@ package com.example.pushupdetector.posedetector.classification;
 public class RepetitionCounter {
   // These thresholds can be tuned in conjunction with the Top K values in {@link PoseClassifier}.
   // The default Top K value is 10 so the range here is [0-10].
-  private static final float DEFAULT_ENTER_THRESHOLD = 6f;
+  private static final float DEFAULT_ENTER_THRESHOLD = 7f;
   private static final float DEFAULT_EXIT_THRESHOLD = 4f;
 
   private final String className;

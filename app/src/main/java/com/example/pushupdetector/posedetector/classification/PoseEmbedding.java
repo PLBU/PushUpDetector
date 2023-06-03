@@ -23,6 +23,8 @@ import static com.example.pushupdetector.posedetector.classification.Utils.multi
 import static com.example.pushupdetector.posedetector.classification.Utils.subtract;
 import static com.example.pushupdetector.posedetector.classification.Utils.subtractAll;
 
+import android.util.Log;
+
 import com.google.mlkit.vision.common.PointF3D;
 import com.google.mlkit.vision.pose.PoseLandmark;
 
@@ -36,6 +38,7 @@ import java.util.List;
 public class PoseEmbedding {
     // Multiplier to apply to the torso to get minimal body size. Picked this by experimentation.
     private static final float TORSO_MULTIPLIER = 2.5f;
+    private static final float Y_THRESHOLD = 2.5f;
 
     public static List<PointF3D> getPoseEmbedding(List<PointF3D> landmarks) {
         List<PointF3D> normalizedLandmarks = normalize(landmarks);
@@ -48,7 +51,8 @@ public class PoseEmbedding {
 
     public static double[][] rotationMatrix(double[] axis, double angle) {
         // compute the rotation matrix for a given axis and angle
-        axis = Arrays.stream(axis).map(a -> a / Math.sqrt(Arrays.stream(axis).map(x -> x * x).sum())).toArray();
+        double[] finalAxis = axis;
+        axis = Arrays.stream(axis).map(a -> a / Math.sqrt(Arrays.stream(finalAxis).map(x -> x * x).sum())).toArray();
         double a = Math.cos(angle / 2.0);
         double[] bcd = Arrays.stream(axis).map(a1 -> -a1 * Math.sin(angle / 2.0)).toArray();
         double aa = a * a, bb = bcd[0] * bcd[0], cc = bcd[1] * bcd[1], dd = bcd[2] * bcd[2];
@@ -78,11 +82,8 @@ public class PoseEmbedding {
     }
 
     private static List<PointF3D> rotateAtoBwithLandmark(PointF3D B, PointF3D A, List<PointF3D> landmarks) {
-        PointF3D A_unit = A;
-        PointF3D B_unit = B;
-
-        multiply(A_unit, (float) getMagnitude(A));
-        multiply(B_unit, (float) getMagnitude(B));
+        PointF3D A_unit = multiply(A, (float) (1 / getMagnitude(A)));
+        PointF3D B_unit = multiply(B, (float) (1 / getMagnitude(B)));
 
         PointF3D axis = cross(B_unit, A_unit);
         float angle = (float) Math.acos(dot(B_unit, A_unit));
@@ -107,13 +108,19 @@ public class PoseEmbedding {
 
     private static List<PointF3D> normalize(List<PointF3D> landmarks) {
         List<PointF3D> normalizedLandmarks = new ArrayList<>(landmarks);
-        // Normalize translation.
 
         // Normalize scale.
         multiplyAll(normalizedLandmarks, 1 / getPoseSize(normalizedLandmarks));
 
+        // [STEP 0]: Check whether the body is oriented Vertically or Horizontally
+        PointF3D LH_CHECK = normalizedLandmarks.get(PoseLandmark.LEFT_HIP);
+        PointF3D LS_CHECK = normalizedLandmarks.get(PoseLandmark.LEFT_SHOULDER);
+
+        // Assume it's oriented Vertically
+        if (Math.abs(LS_CHECK.getY() - LH_CHECK.getY()) < Y_THRESHOLD ) return normalizedLandmarks;
+
         // [STEP 1]: RH to (0, 0, 0)
-        PointF3D RH = landmarks.get(PoseLandmark.RIGHT_HIP);
+        PointF3D RH = normalizedLandmarks.get(PoseLandmark.RIGHT_HIP);
         subtractAll(RH, normalizedLandmarks);
 
         // [STEP 2]: LH to (|LH|, 0, 0)
@@ -137,7 +144,11 @@ public class PoseEmbedding {
           normalizedLandmarks = rotateAtoBwithLandmark(LS, LS_DESIRED, normalizedLandmarks);
         }
 
-      return normalizedLandmarks;
+        Log.d("LMARK Left Shoulder: ", normalizedLandmarks.get(PoseLandmark.LEFT_SHOULDER).toString());
+        Log.d("LMARK Left Hip: ", normalizedLandmarks.get(PoseLandmark.LEFT_HIP).toString());
+        Log.d("LMARK Right Hip: ", normalizedLandmarks.get(PoseLandmark.RIGHT_HIP).toString());
+
+        return normalizedLandmarks;
     }
 
     // Translation normalization should've been done prior to calling this method.

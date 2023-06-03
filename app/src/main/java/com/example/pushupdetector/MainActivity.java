@@ -5,13 +5,10 @@ import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.ExperimentalGetImage;
+import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.core.Camera;
-import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.Preview;
 import androidx.camera.core.UseCaseGroup;
@@ -23,13 +20,13 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.pushupdetector.helper.GraphicOverlay;
 import com.example.pushupdetector.helper.PreferenceHelper;
 import com.example.pushupdetector.posedetector.PoseDetectorProcessor;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.mlkit.common.MlKitException;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
 import java.util.concurrent.ExecutionException;
@@ -44,10 +41,12 @@ public class MainActivity extends AppCompatActivity {
     private Preview previewUseCase;
     @Nullable
     private ImageAnalysis analysisUseCase;
-    @Nullable private PoseDetectorProcessor imageProcessor;
+    @Nullable
+    private PoseDetectorProcessor imageProcessor;
 
     private boolean needUpdateGraphicOverlayImageSourceInfo;
     private CameraSelector cameraSelector;
+    private int lensFacing = CameraSelector.LENS_FACING_BACK;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
@@ -69,6 +68,36 @@ public class MainActivity extends AppCompatActivity {
 
         previewView = findViewById(R.id.preview_view);
         graphicOverlay = findViewById(R.id.graphic_overlay);
+        View flipBtn = findViewById(R.id.btn_flip);
+
+        flipBtn.setOnClickListener(v -> {
+            if (cameraProvider == null) {
+                return;
+            }
+            int newLensFacing =
+                    lensFacing == CameraSelector.LENS_FACING_FRONT
+                            ? CameraSelector.LENS_FACING_BACK
+                            : CameraSelector.LENS_FACING_FRONT;
+            CameraSelector newCameraSelector =
+                    new CameraSelector.Builder().requireLensFacing(newLensFacing).build();
+            try {
+                if (cameraProvider.hasCamera(newCameraSelector)) {
+                    Log.d(TAG, "Set facing to " + newLensFacing);
+                    lensFacing = newLensFacing;
+                    cameraSelector = newCameraSelector;
+                    bindAllCameraUseCases();
+                    return;
+                }
+            } catch (CameraInfoUnavailableException e) {
+                // Falls through
+            }
+            Toast.makeText(
+                            getApplicationContext(),
+                            "This device does not have lens with facing: " + newLensFacing,
+                            Toast.LENGTH_SHORT)
+                    .show();
+        });
+
         setCameraProvider();
     }
 
@@ -98,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
             cameraSelector = new CameraSelector.Builder()
-                    .requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
+                    .requireLensFacing(lensFacing).build();
             setPreviewUseCase();
             setAnalysisUseCase();
 
