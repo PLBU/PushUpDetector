@@ -4,4 +4,5 @@
     <string name="flip">Flip</string>
     <string name="positionHint">Remember to position your body so your head, shoulders, hips, and feet can be seen</string>
     <string name="startPushUp">Start Push Up!</string>
+    <string name="giveCameraAccess">Please give Camera Access to the App</string>
 </resources>

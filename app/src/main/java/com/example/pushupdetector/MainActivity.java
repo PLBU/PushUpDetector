@@ -23,17 +23,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.pushupdetector.databinding.ActivityMainBinding;
+import com.example.pushupdetector.databinding.BottomsheetTutorialBinding;
 import com.example.pushupdetector.helper.GraphicOverlay;
 import com.example.pushupdetector.helper.PreferenceHelper;
 import com.example.pushupdetector.posedetector.PoseDetectorProcessor;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
-    private PreviewView previewView;
-    private GraphicOverlay graphicOverlay;
+    private ActivityMainBinding binding;
 
     @Nullable
     private ProcessCameraProvider cameraProvider;
@@ -46,13 +49,17 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean needUpdateGraphicOverlayImageSourceInfo;
     private CameraSelector cameraSelector;
-    private int lensFacing = CameraSelector.LENS_FACING_BACK;
+    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
+
+    private BottomSheetBehavior<View> bottomSheetBehavior;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             granted -> {
                 if (!granted) {
-                    Toast.makeText(this, "Tolong berikan akses kamera", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Please give camera access", Toast.LENGTH_LONG).show();
+                } else {
+                    onPermissionGranted();
                 }
             }
     );
@@ -60,51 +67,96 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+
+        bottomSheetBehavior = BottomSheetBehavior.from(binding.btmSheetTutor.getRoot());
+        bottomSheetBehavior.setPeekHeight(75);
+
+        setContentView(binding.getRoot());
 
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+        } else {
+            onPermissionGranted();
         }
+    }
 
-        previewView = findViewById(R.id.preview_view);
-        graphicOverlay = findViewById(R.id.graphic_overlay);
-        View flipBtn = findViewById(R.id.btn_flip);
+    private void onPermissionGranted() {
+        binding.tvCamAccess.setVisibility(View.GONE);
+        setCameraProvider();
+        subscribeListeners();
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+    }
 
-        flipBtn.setOnClickListener(v -> {
+    private void subscribeListeners() {
+        binding.getRoot().setOnClickListener(v -> {
+            if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            }
+        });
+
+        binding.btmSheetTutor.btnStart.setOnClickListener(v -> {
+            bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+            binding.getRoot().setOnClickListener(null);
+            binding.cl.setVisibility(View.GONE);
+            bindAllCameraUseCases();
+        });
+
+        binding.btmSheetTutor.getRoot().setOnClickListener(v -> {
+            if (bottomSheetBehavior.getState() == BottomSheetBehavior.STATE_COLLAPSED) {
+                bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+
+        binding.btnFlip.setOnClickListener(v -> {
             if (cameraProvider == null) {
                 return;
             }
+
             int newLensFacing =
                     lensFacing == CameraSelector.LENS_FACING_FRONT
                             ? CameraSelector.LENS_FACING_BACK
                             : CameraSelector.LENS_FACING_FRONT;
             CameraSelector newCameraSelector =
                     new CameraSelector.Builder().requireLensFacing(newLensFacing).build();
+
             try {
                 if (cameraProvider.hasCamera(newCameraSelector)) {
-                    Log.d(TAG, "Set facing to " + newLensFacing);
                     lensFacing = newLensFacing;
                     cameraSelector = newCameraSelector;
-                    bindAllCameraUseCases();
+                    if (previewUseCase != null) {
+                        if (analysisUseCase == null) {
+                            bindPreviewUseCase();
+                        } else {
+                            bindAllCameraUseCases();
+                        }
+                    }
+
                     return;
                 }
             } catch (CameraInfoUnavailableException e) {
                 // Falls through
             }
+
             Toast.makeText(
                             getApplicationContext(),
                             "This device does not have lens with facing: " + newLensFacing,
                             Toast.LENGTH_SHORT)
                     .show();
         });
-
-        setCameraProvider();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        bindAllCameraUseCases();
+        if (previewUseCase != null) {
+            if (analysisUseCase == null) {
+                bindPreviewUseCase();
+            } else {
+                bindAllCameraUseCases();
+            }
+        }
     }
 
     @Override
@@ -123,18 +175,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void bindPreviewUseCase() {
+        if (cameraProvider != null) {
+            cameraProvider.unbindAll();
+            cameraSelector = new CameraSelector.Builder()
+                    .requireLensFacing(lensFacing).build();
+
+            setPreviewUseCase();
+
+            ViewPort viewPort = binding.previewView.getViewPort();
+            if (viewPort != null && previewUseCase !=  null) {
+                cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase);
+            }
+        }
+    }
+
     private void bindAllCameraUseCases() {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
             cameraSelector = new CameraSelector.Builder()
                     .requireLensFacing(lensFacing).build();
+
             setPreviewUseCase();
             setAnalysisUseCase();
 
-            ViewPort viewPort = previewView.getViewPort();
+            ViewPort viewPort = binding.previewView.getViewPort();
             if (viewPort != null && previewUseCase != null && analysisUseCase != null) {
                 UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
                         .addUseCase(previewUseCase)
+                        .addUseCase(analysisUseCase)
                         .setViewPort(viewPort)
                         .build();
 
@@ -149,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
         cameraProviderFuture.addListener(() -> {
             try {
                 this.cameraProvider = cameraProviderFuture.get();
-                bindAllCameraUseCases();
+                bindPreviewUseCase();
             } catch (ExecutionException | InterruptedException e) {
                 // No errors need to be handled for this Future
                 // This should never be reached
@@ -168,7 +237,7 @@ public class MainActivity extends AppCompatActivity {
 
         Preview.Builder builder = new Preview.Builder();
         previewUseCase = builder.build();
-        previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
+        previewUseCase.setSurfaceProvider(binding.previewView.getSurfaceProvider());
     }
 
     private void setAnalysisUseCase() {
@@ -210,24 +279,22 @@ public class MainActivity extends AppCompatActivity {
                         boolean isImageFlipped = cameraSelector.getLensFacing() == CameraSelector.LENS_FACING_FRONT;
                         int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
                         if (rotationDegrees == 0 || rotationDegrees == 180) {
-                            graphicOverlay.setImageSourceInfo(
+                            binding.graphicOverlay.setImageSourceInfo(
                                     imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
                         } else {
-                            graphicOverlay.setImageSourceInfo(
+                            binding.graphicOverlay.setImageSourceInfo(
                                     imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
                         }
                         needUpdateGraphicOverlayImageSourceInfo = false;
                     }
 
                     try {
-                        imageProcessor.processImageProxy(imageProxy, graphicOverlay);
+                        imageProcessor.processImageProxy(imageProxy, binding.graphicOverlay);
                     } catch (Exception e) {
                         Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
                         Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
                                 .show();
                     }
                 });
-
-        cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
     }
 }

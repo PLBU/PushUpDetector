@@ -5,9 +5,18 @@
     android:layout_height="wrap_content"
     android:background="@drawable/bg_white_top_rounded"
     android:orientation="vertical"
-    android:padding="20dp">
+    android:paddingHorizontal="20dp"
+    android:paddingBottom="20dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_gravity="center"
+        app:srcCompat="@drawable/ic_arrow_up" />
 
     <TextView
+        android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/positionHint"
@@ -19,8 +28,9 @@
         app:srcCompat="@drawable/img_tutorial_pushup" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:text="@string/startPushUp"
+        android:id="@+id/btnStart"
         style="@style/button"
         android:layout_width="match_parent"
-        android:layout_height="40dp"/>
+        android:layout_height="40dp"
+        android:text="@string/startPushUp" />
 </androidx.appcompat.widget.LinearLayoutCompat>
