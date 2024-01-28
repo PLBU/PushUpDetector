@@ -3,8 +3,10 @@
     <color name="orange_250">#FCE1CF</color>
     <color name="orange_1000">#F4873D</color>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#FAFAFA</color>
     <color name="gray_500">#71717A</color>
     <color name="gray_800">#27272A</color>
     <color name="low_transparent">#B3FAFAFA</color>
+    <color name="transparent">#00FFFFFF</color>
+    <color name="red">#DF3030</color>
 </resources>

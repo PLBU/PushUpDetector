@@ -2,4 +2,6 @@
     <string name="app_name">PushUpDetector</string>
     <string name="counter">Counter</string>
     <string name="flip">Flip</string>
+    <string name="positionHint">Remember to position your body so your head, shoulders, hips, and feet can be seen</string>
+    <string name="startPushUp">Start Push Up!</string>
 </resources>
