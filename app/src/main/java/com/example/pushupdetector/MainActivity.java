@@ -2,8 +2,11 @@ package com.example.pushupdetector;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
 
+import static com.example.pushupdetector.posedetector.classification.PoseClassifierProcessor.backgroundHandler;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraInfoUnavailableException;
@@ -19,6 +22,9 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -28,11 +34,13 @@ import com.example.pushupdetector.databinding.BottomsheetTutorialBinding;
 import com.example.pushupdetector.helper.GraphicOverlay;
 import com.example.pushupdetector.helper.PreferenceHelper;
 import com.example.pushupdetector.posedetector.PoseDetectorProcessor;
+import com.example.pushupdetector.posedetector.classification.PoseClassifierProcessor;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -53,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
     private BottomSheetBehavior<View> bottomSheetBehavior;
 
+    public static Handler mainHandler;
+
     private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             granted -> {
@@ -72,6 +82,15 @@ public class MainActivity extends AppCompatActivity {
 
         bottomSheetBehavior = BottomSheetBehavior.from(binding.btmSheetTutor.getRoot());
         bottomSheetBehavior.setPeekHeight(75);
+
+        mainHandler = new Handler(getMainLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                int message = (int) msg.obj;
+
+                Log.d("HANDULA", String.valueOf(message));
+            }
+        };
 
         setContentView(binding.getRoot());
 
@@ -100,7 +119,14 @@ public class MainActivity extends AppCompatActivity {
             bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             binding.getRoot().setOnClickListener(null);
             binding.cl.setVisibility(View.GONE);
+            binding.btnFinish.setVisibility(View.VISIBLE);
             bindAllCameraUseCases();
+        });
+
+        binding.btnFinish.setOnClickListener(v -> {
+            Message toBackground = new Message();
+            toBackground.obj = PoseClassifierProcessor.TAG;
+            backgroundHandler.sendMessage(toBackground);
         });
 
         binding.btmSheetTutor.getRoot().setOnClickListener(v -> {

@@ -1,27 +1,19 @@
-/*
- * Copyright 2020 Google LLC. All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 
 package com.example.pushupdetector.posedetector.classification;
+
+import static com.example.pushupdetector.MainActivity.mainHandler;
 
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.google.common.base.Preconditions;
@@ -33,12 +25,13 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Accepts a stream of {@link Pose} for classification and Rep counting.
  */
 public class PoseClassifierProcessor {
-    private static final String TAG = "PoseClassifierProcessor";
+    public static final String TAG = "PoseClassifierProcessor";
     private static final String POSE_SAMPLES_FILE = "fitness_pose_samples.csv";
 
     // Specify classes for which we want rep counting.
@@ -46,12 +39,15 @@ public class PoseClassifierProcessor {
     // for your pose samples.
     private static final String PUSHUPS_CLASS = "pushups_down";
 
+    public static Handler backgroundHandler;
+
     private final boolean isStreamMode;
 
     private EMASmoothing emaSmoothing;
     private RepetitionCounter repCounter;
     private PoseClassifier poseClassifier;
     private String lastRepResult;
+    private int currReps = 0;
 
     @WorkerThread
     public PoseClassifierProcessor(Context context, boolean isStreamMode) {
@@ -61,6 +57,22 @@ public class PoseClassifierProcessor {
             emaSmoothing = new EMASmoothing();
             lastRepResult = "";
         }
+
+        HandlerThread handlerThread = new HandlerThread("PoseClassifierBackgroundThread");
+        handlerThread.start();
+        backgroundHandler = new Handler(handlerThread.getLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                String message = (String) msg.obj;
+                if (TAG.equals(message)) {
+                    Message toMain = new Message();
+                    toMain.obj = currReps;
+                    mainHandler.sendMessage(toMain);
+                }
+
+            }
+        };
+
         loadPoseSamples(context);
     }
 
@@ -113,6 +125,7 @@ public class PoseClassifierProcessor {
             tg.startTone(ToneGenerator.TONE_PROP_BEEP);
             lastRepResult = String.format(
                     Locale.US, "Counter : %d reps", repsAfter);
+            currReps = repsAfter;
         }
         return lastRepResult;
     }

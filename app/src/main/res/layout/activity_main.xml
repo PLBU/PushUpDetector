@@ -56,6 +56,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnFinish"
+        style="@style/button"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_red_rounded"
+        android:paddingHorizontal="40dp"
+        android:text="@string/finish"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/cl"
         android:layout_width="match_parent"

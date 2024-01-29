@@ -8,6 +8,7 @@ public class PreferenceHelper {
     public static PoseDetectorOptionsBase getPoseDetectorDefaultOptions() {
         PoseDetectorOptions.Builder builder =
                 new PoseDetectorOptions.Builder().setDetectorMode(PoseDetectorOptions.STREAM_MODE);
+
         return builder.build();
     }
 }
