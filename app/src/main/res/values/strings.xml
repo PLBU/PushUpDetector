@@ -11,4 +11,5 @@
     <string name="reps">reps</string>
     <string name="redoPushUp">Do Push Up again!</string>
     <string name="finish">Finish</string>
+    <string name="clothesHint">Use clothes with color that is contrast with the background so the AI can count more accurately</string>
 </resources>

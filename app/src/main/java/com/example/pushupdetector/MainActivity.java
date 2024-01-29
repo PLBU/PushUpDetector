@@ -20,6 +20,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -86,9 +87,13 @@ public class MainActivity extends AppCompatActivity {
         mainHandler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(@NonNull Message msg) {
-                int message = (int) msg.obj;
+                int reps = (int) msg.obj;
 
-                Log.d("HANDULA", String.valueOf(message));
+                Intent goToComplete = new Intent(getApplicationContext(), CompleteActivity.class);
+                goToComplete.putExtra("REPS", reps);
+
+                onDestroy();
+                startActivity(goToComplete);
             }
         };
 
