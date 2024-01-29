@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
 
         bottomSheetBehavior = BottomSheetBehavior.from(binding.btmSheetTutor.getRoot());
-        bottomSheetBehavior.setPeekHeight(75);
+        bottomSheetBehavior.setPeekHeight(100);
 
         mainHandler = new Handler(getMainLooper()) {
             @Override
@@ -223,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void bindAllCameraUseCases() {
         if (cameraProvider != null) {
+            binding.llProgress.setVisibility(View.VISIBLE);
             cameraProvider.unbindAll();
             cameraSelector = new CameraSelector.Builder()
                     .requireLensFacing(lensFacing).build();
