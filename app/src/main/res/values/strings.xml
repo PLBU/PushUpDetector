@@ -1,8 +1,13 @@
 <resources>
-    <string name="app_name">PushUpDetector</string>
+    <string name="app_name">AI Push Up Counter</string>
     <string name="counter">Counter</string>
     <string name="flip">Flip</string>
     <string name="positionHint">Remember to position your body so your head, shoulders, hips, and feet can be seen</string>
     <string name="startPushUp">Start Push Up!</string>
     <string name="giveCameraAccess">Please give Camera Access to the App</string>
+    <string name="appNameShort">AIPUC</string>
+    <string name="congrats1">Nice! You did good. AI Push Up Counter counted your correct push ups for</string>
+    <string name="congrats2">Keep Up the Good Work! I\'ll see you tomorrow!</string>
+    <string name="reps">reps</string>
+    <string name="redoPushUp">Do Push Up again!</string>
 </resources>

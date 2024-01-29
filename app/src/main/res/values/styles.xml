@@ -3,6 +3,12 @@
     <style name="title" parent="Base.TextAppearance.AppCompat">
         <item name="android:textSize">20sp</item>
         <item name="android:fontFamily">@font/racing_sans_one</item>
+        <item name="android:textColor">@color/red</item>
+    </style>
+
+    <style name="subtitle">
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/racing_sans_one</item>
     </style>
 
     <style name="button">
