@@ -22,6 +22,9 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -87,13 +90,15 @@ public class MainActivity extends AppCompatActivity {
         mainHandler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(@NonNull Message msg) {
-                int reps = (int) msg.obj;
+                if (msg.arg1 == MessageType.FINISH.ordinal()) {
+                    int reps = (int) msg.obj;
 
-                Intent goToComplete = new Intent(getApplicationContext(), CompleteActivity.class);
-                goToComplete.putExtra("REPS", reps);
+                    Intent goToComplete = new Intent(getApplicationContext(), CompleteActivity.class);
+                    goToComplete.putExtra("REPS", reps);
 
-                onDestroy();
-                startActivity(goToComplete);
+                    startActivity(goToComplete);
+                    finish();
+                }
             }
         };
 
@@ -193,14 +198,27 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (imageProcessor != null) {
-            imageProcessor.stop();
-        }
+        reset();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        reset();
+    }
+
+    private void reset() {
+        if (cameraProvider != null) {
+            cameraProvider.unbindAll();
+            cameraProvider = null;
+        }
+        if (previewUseCase != null) {
+            previewUseCase = null;
+        }
+        if (analysisUseCase != null) {
+            analysisUseCase.clearAnalyzer();
+            analysisUseCase = null;
+        }
         if (imageProcessor != null) {
             imageProcessor.stop();
         }
@@ -223,7 +241,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void bindAllCameraUseCases() {
         if (cameraProvider != null) {
-            binding.llProgress.setVisibility(View.VISIBLE);
             cameraProvider.unbindAll();
             cameraSelector = new CameraSelector.Builder()
                     .requireLensFacing(lensFacing).build();

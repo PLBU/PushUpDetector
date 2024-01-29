@@ -82,22 +82,4 @@
             android:id="@+id/btmSheetTutor"
             layout="@layout/bottomsheet_tutorial" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:visibility="gone"
-        android:id="@+id/llProgress"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        android:gravity="center"
-        android:background="@color/high_transparent">
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:indeterminate="true"
-            app:indicatorColor="@color/red" />
-    </androidx.appcompat.widget.LinearLayoutCompat>
 </androidx.constraintlayout.widget.ConstraintLayout>

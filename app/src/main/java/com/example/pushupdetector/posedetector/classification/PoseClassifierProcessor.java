@@ -6,6 +6,7 @@ import static com.example.pushupdetector.MainActivity.mainHandler;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.ToneGenerator;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -16,6 +17,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.example.pushupdetector.MessageType;
+import com.example.pushupdetector.R;
 import com.google.common.base.Preconditions;
 import com.google.mlkit.vision.pose.Pose;
 
@@ -49,6 +52,8 @@ public class PoseClassifierProcessor {
     private String lastRepResult;
     private int currReps = 0;
 
+    private final MediaPlayer mediaPlayer;
+
     @WorkerThread
     public PoseClassifierProcessor(Context context, boolean isStreamMode) {
         Preconditions.checkState(Looper.myLooper() != Looper.getMainLooper());
@@ -66,12 +71,15 @@ public class PoseClassifierProcessor {
                 String message = (String) msg.obj;
                 if (TAG.equals(message)) {
                     Message toMain = new Message();
+                    toMain.arg1 = MessageType.FINISH.ordinal();
                     toMain.obj = currReps;
                     mainHandler.sendMessage(toMain);
                 }
 
             }
         };
+
+        mediaPlayer = MediaPlayer.create(context.getApplicationContext(), R.raw.counter);
 
         loadPoseSamples(context);
     }
@@ -121,8 +129,8 @@ public class PoseClassifierProcessor {
         int repsAfter = repCounter.addClassificationResult(classification);
         if (repsAfter > repsBefore) {
             // Play a fun beep when rep counter updates.
-            ToneGenerator tg = new ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100);
-            tg.startTone(ToneGenerator.TONE_PROP_BEEP);
+            mediaPlayer.start();
+
             lastRepResult = String.format(
                     Locale.US, "Counter : %d reps", repsAfter);
             currReps = repsAfter;

@@ -9,6 +9,10 @@ public class PreferenceHelper {
         PoseDetectorOptions.Builder builder =
                 new PoseDetectorOptions.Builder().setDetectorMode(PoseDetectorOptions.STREAM_MODE);
 
+//        if (preferGPU) {
+//            builder.setPreferredHardwareConfigs(PoseDetectorOptions.CPU_GPU);
+//        }
+
         return builder.build();
     }
 }
