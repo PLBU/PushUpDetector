@@ -7,7 +7,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.example.pushupdetector"
+        applicationId "id.my.linar.aipuc"
         minSdk 28
         targetSdk 33
         versionCode 1
