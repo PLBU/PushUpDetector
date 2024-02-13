@@ -1,8 +1,17 @@
 package com.example.pushupdetector;
 
 import static androidx.constraintlayout.helper.widget.MotionEffect.TAG;
-
 import static com.example.pushupdetector.posedetector.classification.PoseClassifierProcessor.backgroundHandler;
+
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -10,41 +19,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraInfoUnavailableException;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.Preview;
 import androidx.camera.core.UseCaseGroup;
 import androidx.camera.core.ViewPort;
-import androidx.camera.view.PreviewView;
+import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.ToneGenerator;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
-
 import com.example.pushupdetector.databinding.ActivityMainBinding;
-import com.example.pushupdetector.databinding.BottomsheetTutorialBinding;
-import com.example.pushupdetector.helper.GraphicOverlay;
 import com.example.pushupdetector.helper.PreferenceHelper;
 import com.example.pushupdetector.posedetector.PoseDetectorProcessor;
 import com.example.pushupdetector.posedetector.classification.PoseClassifierProcessor;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.pose.PoseDetectorOptionsBase;
 
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity {
@@ -104,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(binding.getRoot());
 
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
         } else {
             onPermissionGranted();
@@ -145,42 +135,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        binding.btnFlip.setOnClickListener(v -> {
-            if (cameraProvider == null) {
-                return;
-            }
-
-            int newLensFacing =
-                    lensFacing == CameraSelector.LENS_FACING_FRONT
-                            ? CameraSelector.LENS_FACING_BACK
-                            : CameraSelector.LENS_FACING_FRONT;
-            CameraSelector newCameraSelector =
-                    new CameraSelector.Builder().requireLensFacing(newLensFacing).build();
-
-            try {
-                if (cameraProvider.hasCamera(newCameraSelector)) {
-                    lensFacing = newLensFacing;
-                    cameraSelector = newCameraSelector;
-                    if (previewUseCase != null) {
-                        if (analysisUseCase == null) {
-                            bindPreviewUseCase();
-                        } else {
-                            bindAllCameraUseCases();
-                        }
-                    }
-
-                    return;
-                }
-            } catch (CameraInfoUnavailableException e) {
-                // Falls through
-            }
-
-            Toast.makeText(
-                            getApplicationContext(),
-                            "This device does not have lens with facing: " + newLensFacing,
-                            Toast.LENGTH_SHORT)
-                    .show();
-        });
+        binding.btnFlip.setOnClickListener(v -> flipCamera());
     }
 
     @Override
@@ -205,6 +160,43 @@ public class MainActivity extends AppCompatActivity {
     public void onDestroy() {
         super.onDestroy();
         reset();
+    }
+
+    private void flipCamera() {
+        if (cameraProvider == null) {
+            return;
+        }
+
+        int newLensFacing =
+                lensFacing == CameraSelector.LENS_FACING_FRONT
+                        ? CameraSelector.LENS_FACING_BACK
+                        : CameraSelector.LENS_FACING_FRONT;
+        CameraSelector newCameraSelector =
+                new CameraSelector.Builder().requireLensFacing(newLensFacing).build();
+
+        try {
+            if (cameraProvider.hasCamera(newCameraSelector)) {
+                lensFacing = newLensFacing;
+                cameraSelector = newCameraSelector;
+                if (previewUseCase != null) {
+                    if (analysisUseCase == null) {
+                        bindPreviewUseCase();
+                    } else {
+                        bindAllCameraUseCases();
+                    }
+                }
+
+                return;
+            }
+        } catch (CameraInfoUnavailableException e) {
+            // Falls through
+        }
+
+        Toast.makeText(
+                        getApplicationContext(),
+                        "This device does not have lens with facing: " + newLensFacing,
+                        Toast.LENGTH_SHORT)
+                .show();
     }
 
     private void reset() {
@@ -233,8 +225,16 @@ public class MainActivity extends AppCompatActivity {
             setPreviewUseCase();
 
             ViewPort viewPort = binding.previewView.getViewPort();
-            if (viewPort != null && previewUseCase !=  null) {
-                cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase);
+            if (viewPort != null && previewUseCase != null) {
+                try {
+                    cameraProvider.bindToLifecycle(this, cameraSelector, previewUseCase);
+                } catch (Exception e) {
+                    Toast.makeText(
+                                    getApplicationContext(),
+                                    "Error: " + e.getLocalizedMessage(),
+                                    Toast.LENGTH_LONG)
+                            .show();
+                }
             }
         }
     }
@@ -256,7 +256,15 @@ public class MainActivity extends AppCompatActivity {
                         .setViewPort(viewPort)
                         .build();
 
-                cameraProvider.bindToLifecycle(this, cameraSelector, useCaseGroup);
+                try {
+                    cameraProvider.bindToLifecycle(this, cameraSelector, useCaseGroup);
+                } catch (Exception e) {
+                    Toast.makeText(
+                                    getApplicationContext(),
+                                    "Error: " + e.getLocalizedMessage(),
+                                    Toast.LENGTH_LONG)
+                            .show();
+                }
             }
         }
     }
